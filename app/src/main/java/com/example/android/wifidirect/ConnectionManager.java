@@ -31,6 +31,7 @@ public class ConnectionManager {
     // Server knows all clients. key is ip addr, value is socket channel.
     // when remote client screen on, a new connection with the same ip addr is established.
     public Map<String, SocketChannel> mClientChannels = new HashMap<String, SocketChannel>();
+    public boolean disconnectNow;
 
 
     public static ConnectionManager getInstance() {

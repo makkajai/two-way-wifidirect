@@ -90,6 +90,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                     @Override
                     public void onClick(View v) {
+                        ConnectionManager.getInstance().disconnectNow = true;
                         ((DeviceActionListener) getActivity()).disconnect();
                     }
                 });

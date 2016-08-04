@@ -54,7 +54,7 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
     @Override
     protected String doInBackground(Void... params) {
         try {
-            closeClient();   // close linger server.
+            closeServer();   // close linger server.
 
             // create server socket and register to selector to listen OP_ACCEPT event
             this.instance.mServerSocketChannel = createServerSocketChannel(8988); // BindException if already bind.
@@ -65,10 +65,10 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
             acceptKey.attach("accept_channel");
 
             // Wait for events looper
-            while (true) {
+            while (!ConnectionManager.getInstance().disconnectNow) {
                 try {
                     Log.d(WiFiDirectActivity.TAG, "select : selector monitoring: ");
-                    this.instance.mServerSelector.select();   // blocked on waiting for event
+                    this.instance.mServerSelector.select(1000);   // blocked on waiting for event
 
                     Log.d(WiFiDirectActivity.TAG, "select : selector evented out: ");
                     // Get list of selection keys with pending events, and process it.
@@ -92,6 +92,8 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
                     break;
                 }
             }
+            ConnectionManager.getInstance().disconnectNow = false;
+            closeServer();   // close linger server.
             return "";
         } catch (IOException e) {
             Log.e(WiFiDirectActivity.TAG, e.getMessage());
@@ -99,21 +101,25 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
         }
     }
 
-    public void closeClient() {
-        if(this.instance.mClientSocketChannel != null ){
+    /**
+     * a device can only be either group owner, or group client, not both.
+     * when we start as client, close server, if existing due to linger connection.
+     */
+    public void closeServer() {
+        if(this.instance.mServerSocketChannel != null ){
             try{
-                this.instance.mClientSocketChannel.close();
-                this.instance.mClientSelector.close();
+                this.instance.mServerSocketChannel.close();
+                this.instance.mServerSelector.close();
             }catch(Exception e){
 
             }finally{
-                this.instance.mClientSocketChannel = null;
-                this.instance.mClientSelector = null;
-                this.instance.mClientAddr = null;
+                this.instance.mServerSocketChannel = null;
+                this.instance.mServerSelector = null;
+                this.instance.mServerAddr = null;
+                this.instance.mClientChannels.clear();
             }
         }
     }
-
 
     /**
      * process the event popped to the selector
@@ -151,10 +157,6 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
             // MyIdentifierType myIdentifier = (MyIdentifierType)key.attachment();
             // myIdentifier.readTheData();
             doReadable(sChannel);
-        } else if (selKey.isValid() && selKey.isWritable()) {
-            // Not select on writable...endless loop.
-            SocketChannel sChannel = (SocketChannel)selKey.channel();
-            Log.d(WiFiDirectActivity.TAG, "processSelectionKey : remote client is writable, write data: ");
         }
     }
 
@@ -198,7 +200,6 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
      */
     public void doReadable(SocketChannel schannel){
         String data = readData(schannel);
-        Toast.makeText(this.instance.context, data, Toast.LENGTH_SHORT).show();
         if( data != null ){
             Bundle b = new Bundle();
             b.putString("DATA", data);

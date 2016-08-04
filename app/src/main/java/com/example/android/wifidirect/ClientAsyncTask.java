@@ -34,29 +34,24 @@ public class ClientAsyncTask  extends AsyncTask<Void, Void, Integer> {
         this.instance.statusText = (TextView) viewById;
     }
 
-    /**
-     * a device can only be either group owner, or group client, not both.
-     * when we start as client, close server, if existing due to linger connection.
-     */
-    public void closeServer() {
-        if(this.instance.mServerSocketChannel != null ){
+    public void closeClient() {
+        if(this.instance.mClientSocketChannel != null ){
             try{
-                this.instance.mServerSocketChannel.close();
-                this.instance.mServerSelector.close();
+                this.instance.mClientSocketChannel.close();
+                this.instance.mClientSelector.close();
             }catch(Exception e){
 
             }finally{
-                this.instance.mServerSocketChannel = null;
-                this.instance.mServerSelector = null;
-                this.instance.mServerAddr = null;
-                this.instance.mClientChannels.clear();
+                this.instance.mClientSocketChannel = null;
+                this.instance.mClientSelector = null;
+                this.instance.mClientAddr = null;
             }
         }
     }
 
     @Override
     protected Integer doInBackground(Void... voids) {
-        closeServer();   // close linger server.
+        closeClient();   // close linger server.
 
         if(this.instance.mClientSocketChannel != null){
             Log.d(WiFiDirectActivity.TAG, "startClientSelector : client already connected to server: "
@@ -78,10 +73,10 @@ public class ClientAsyncTask  extends AsyncTask<Void, Void, Integer> {
             // start selector monitoring, blocking
 
             // Wait for events looper
-            while (true) {
+            while (!ConnectionManager.getInstance().disconnectNow) {
                 try {
                     Log.d(WiFiDirectActivity.TAG, "select : selector monitoring: ");
-                    this.instance.mClientSelector.select();   // blocked on waiting for event
+                    this.instance.mClientSelector.select(1000);   // blocked on waiting for event
 
                     Log.d(WiFiDirectActivity.TAG, "select : selector evented out: ");
                     // Get list of selection keys with pending events, and process it.
@@ -105,6 +100,8 @@ public class ClientAsyncTask  extends AsyncTask<Void, Void, Integer> {
                     break;
                 }
             }
+            ConnectionManager.getInstance().disconnectNow = false;
+            closeClient();   // close linger server.
             return 0;
 
         } catch(Exception e) {
@@ -163,7 +160,6 @@ public class ClientAsyncTask  extends AsyncTask<Void, Void, Integer> {
      */
     public void doReadable(SocketChannel schannel){
         String data = readData(schannel);
-        Toast.makeText(this.instance.context, data, Toast.LENGTH_SHORT).show();
         if( data != null ){
             Bundle b = new Bundle();
             b.putString("DATA", data);
