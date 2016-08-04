@@ -42,14 +42,12 @@ import java.io.OutputStream;
  * A fragment that manages a particular peer and allows interaction with device
  * i.e. setting up network connection and transferring data.
  */
-public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener {
+public class DeviceDetailFragment extends Fragment {
 
-    protected static final int CHOOSE_FILE_RESULT_CODE = 20;
     private View mContentView = null;
     private WifiP2pDevice device;
     private WifiP2pInfo info;
     ProgressDialog progressDialog = null;
-    private boolean isServer;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -106,7 +104,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 //                        intent.setType("image/*");
 //                        startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
 
-                        if(isServer)
+                        if(P2PManager.getInstance().isServer())
                             ConnectionManager.getInstance().pushOutDataToClient("SERVERERE: Hello world from server!");
                         else
                             ConnectionManager.getInstance().pushOutDataToServer("CLIERNTE: Hello world from client!");
@@ -134,45 +132,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 info.groupOwnerAddress.getHostAddress());
         serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
         getActivity().startService(serviceIntent);
-    }
-
-    @Override
-    public void onConnectionInfoAvailable(final WifiP2pInfo info) {
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
-        this.info = info;
-        this.getView().setVisibility(View.VISIBLE);
-
-        // The owner IP is now known.
-        TextView view = (TextView) mContentView.findViewById(R.id.group_owner);
-        view.setText(getResources().getString(R.string.group_owner_text)
-                + ((info.isGroupOwner == true) ? getResources().getString(R.string.yes)
-                        : getResources().getString(R.string.no)));
-
-        // InetAddress from WifiP2pInfo struct.
-        view = (TextView) mContentView.findViewById(R.id.device_info);
-        view.setText("Group Owner IP - " + info.groupOwnerAddress.getHostAddress());
-
-        // After the group negotiation, we assign the group owner as the file
-        // server. The file server is single threaded, single connection server
-        // socket.
-        if (info.groupFormed && info.isGroupOwner) {
-            new ServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text), ConnectionManager.getInstance())
-                    .execute();
-            isServer = true;
-        } else if (info.groupFormed) {
-            // The other device acts as the client. In this case, we enable the
-            // get file button.
-            new ClientAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text), info.groupOwnerAddress.getHostAddress(),
-                    ConnectionManager.getInstance())
-                    .execute();
-            isServer = false;
-        }
-        mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-
-        // hide the connect button
-        mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
     }
 
     /**

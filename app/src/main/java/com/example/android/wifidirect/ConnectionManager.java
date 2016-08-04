@@ -1,16 +1,12 @@
 package com.example.android.wifidirect;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.TextView;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by batman on 04/08/16.
@@ -19,7 +15,6 @@ public class ConnectionManager {
     private static final ConnectionManager instance = new ConnectionManager();
     public Context context;
     public String hostAddress;
-    public TextView statusText;
     public ServerSocketChannel mServerSocketChannel = null;
     public String mClientAddr = null;
     public String mServerAddr = null;
@@ -28,11 +23,7 @@ public class ConnectionManager {
     public SocketChannel mClientSocketChannel = null;
     public SocketChannel mServerSocketChannelData = null;
 
-    // Server knows all clients. key is ip addr, value is socket channel.
-    // when remote client screen on, a new connection with the same ip addr is established.
-    public Map<String, SocketChannel> mClientChannels = new HashMap<String, SocketChannel>();
     public boolean disconnectNow;
-
 
     public static ConnectionManager getInstance() {
         return instance;

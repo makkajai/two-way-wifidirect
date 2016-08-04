@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -28,15 +27,12 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
 
     /**
      * @param context
-     * @param statusText
      * @param instance
      */
-    public ServerAsyncTask(Context context, View statusText, ConnectionManager instance) {
+    public ServerAsyncTask(Context context, ConnectionManager instance) {
         this.instance = instance;
         this.instance.context = context;
-        this.instance.statusText = (TextView) statusText;
     }
-
 
     /**
      * create a server socket channel to listen to the port for incoming connections.
@@ -116,7 +112,6 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
                 this.instance.mServerSocketChannel = null;
                 this.instance.mServerSelector = null;
                 this.instance.mServerAddr = null;
-                this.instance.mClientChannels.clear();
             }
         }
     }
@@ -206,23 +201,4 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
 //                notifyConnectionService(MSG_PULLIN_DATA, schannel, b);
         }
     }
-
-
-    /*
-     * (non-Javadoc)
-     * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-     */
-    @Override
-    protected void onPostExecute(String result) {
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see android.os.AsyncTask#onPreExecute()
-     */
-    @Override
-    protected void onPreExecute() {
-        this.instance.statusText.setText("Opening a server socket");
-    }
-
 }

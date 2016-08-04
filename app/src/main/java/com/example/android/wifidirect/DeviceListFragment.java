@@ -40,12 +40,12 @@ import java.util.List;
  * A ListFragment that displays available peers on discovery and requests the
  * parent activity to handle user interaction events
  */
-public class DeviceListFragment extends ListFragment implements PeerListListener {
+public class DeviceListFragment extends ListFragment {
 
-    private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     ProgressDialog progressDialog = null;
     View mContentView = null;
     private WifiP2pDevice device;
+    private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -152,7 +152,6 @@ public class DeviceListFragment extends ListFragment implements PeerListListener
         view.setText(getDeviceStatus(device.status));
     }
 
-    @Override
     public void onPeersAvailable(WifiP2pDeviceList peerList) {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();

@@ -1,13 +1,9 @@
 package com.example.android.wifidirect;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -16,9 +12,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Created by batman on 04/08/16.
@@ -27,11 +21,10 @@ public class ClientAsyncTask  extends AsyncTask<Void, Void, Integer> {
 
     private ConnectionManager instance;
 
-    public ClientAsyncTask(Activity activity, View viewById, String hostAddress, ConnectionManager instance) {
+    public ClientAsyncTask(Activity activity, String hostAddress, ConnectionManager instance) {
         this.instance = instance;
         this.instance.context = activity;
         this.instance.hostAddress = hostAddress;
-        this.instance.statusText = (TextView) viewById;
     }
 
     public void closeClient() {
