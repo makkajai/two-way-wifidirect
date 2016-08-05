@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Created by batman on 04/08/16.
  */
-public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceListFragment.DeviceActionListener, WifiP2pManager.PeerListListener, WifiP2pManager.ConnectionInfoListener {
+public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceActionListener, WifiP2pManager.PeerListListener, WifiP2pManager.ConnectionInfoListener {
 
     private static final String TAG = "P2PManager";
     private static final P2PManager instance = new P2PManager();
@@ -158,6 +158,8 @@ public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceListFr
     public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
         peers.clear();
         peers.addAll(wifiP2pDeviceList.getDeviceList());
+
+        ((P2PListener)activity).onPeersAvailable(peers);
     }
 
     @Override

@@ -23,7 +23,7 @@ public class ConnectionManager {
     public SocketChannel mClientSocketChannel = null;
     public SocketChannel mServerSocketChannelData = null;
 
-    public boolean disconnectNow;
+    public boolean disconnectNow = false;
 
     public static ConnectionManager getInstance() {
         return instance;

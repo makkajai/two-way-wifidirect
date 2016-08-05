@@ -152,12 +152,12 @@ public class DeviceListFragment extends ListFragment {
         view.setText(getDeviceStatus(device.status));
     }
 
-    public void onPeersAvailable(WifiP2pDeviceList peerList) {
+    public void onPeersAvailable(List<WifiP2pDevice> peerList) {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
         peers.clear();
-        peers.addAll(peerList.getDeviceList());
+        peers.addAll(peerList);
         ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
         if (peers.size() == 0) {
             Log.d(WiFiDirectActivity.TAG, "No devices found");
@@ -187,20 +187,6 @@ public class DeviceListFragment extends ListFragment {
                     }
                 });
     }
-
-    /**
-     * An interface-callback for the activity to listen to fragment interaction
-     * events.
-     */
-    public interface DeviceActionListener {
-
-        void showDetails(WifiP2pDevice device);
-
-        void cancelDisconnect();
-
-        void connect(WifiP2pConfig config);
-
-        void disconnect();
-    }
-
 }
+
+

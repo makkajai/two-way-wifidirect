@@ -91,7 +91,6 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
             } else {
                 // It's a disconnect
                 P2PManager.getInstance().disconnect();
-                ConnectionManager.getInstance().disconnectNow = true;
             }
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             //NOTE: Update the device info -- DEEP

@@ -18,20 +18,14 @@ package com.example.android.wifidirect;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pManager.ActionListener;
-import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
 
-import com.example.android.wifidirect.DeviceListFragment.DeviceActionListener;
+import java.util.List;
 
 /**
  * An activity that uses WiFi Direct APIs to discover and connect with available
@@ -40,7 +34,7 @@ import com.example.android.wifidirect.DeviceListFragment.DeviceActionListener;
  * The application should also register a BroadcastReceiver for notification of
  * WiFi state related events.
  */
-public class WiFiDirectActivity extends Activity {
+public class WiFiDirectActivity extends Activity implements P2PListener {
 
     public static final String TAG = "wifidirectdemo";
 
@@ -64,6 +58,8 @@ public class WiFiDirectActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
+        resetData();
+        ConnectionManager.getInstance().disconnectNow = false;
         P2PManager.getInstance().startReceiver();
         P2PManager.getInstance().discoverPeers();
     }
@@ -118,5 +114,12 @@ public class WiFiDirectActivity extends Activity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onPeersAvailable(List<WifiP2pDevice> wifiP2pDeviceList) {
+        DeviceListFragment fragmentList = (DeviceListFragment) getFragmentManager()
+                .findFragmentById(R.id.frag_list);
+        fragmentList.onPeersAvailable(wifiP2pDeviceList);
     }
 }
