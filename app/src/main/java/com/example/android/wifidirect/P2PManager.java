@@ -25,23 +25,25 @@ public class P2PManager  implements WifiP2pManager.ChannelListener,
 
     private static final String TAG = "P2PManager";
     private static final P2PManager instance = new P2PManager();
-    private Activity activity;
+
     private boolean isWifiP2pEnabled;
     private boolean isServer;
-    private AsyncTask<Void, Void, Integer> task;
+
+    private Activity activity = null;
+
+    private AsyncTask<Void, Void, Integer> task = null;
+
+    private WifiP2pManager manager = null;
+
+    private final IntentFilter intentFilter = new IntentFilter();
+    private WifiP2pManager.Channel channel = null;
+    private BroadcastReceiver receiver = null;
+    private WifiP2pDevice device = null;
+    private List<WifiP2pDevice> peers = new ArrayList<>();
 
     public static P2PManager getInstance() {
         return instance;
     }
-
-    private WifiP2pManager manager;
-    private final IntentFilter intentFilter = new IntentFilter();
-    private WifiP2pManager.Channel channel;
-    private BroadcastReceiver receiver = null;
-    private WifiP2pDevice device;
-
-    private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
-
 
     public void initialize(Activity activity) {
         this.activity = activity;
@@ -144,6 +146,7 @@ public class P2PManager  implements WifiP2pManager.ChannelListener,
 
         });
         terminateTask();
+        this.device = null;
     }
 
     @Override
@@ -184,13 +187,13 @@ public class P2PManager  implements WifiP2pManager.ChannelListener,
             terminateTask();
         }
         if (info.groupFormed && info.isGroupOwner) {
-            task = new ServerAsyncTask(activity, ConnectionManager.getInstance());
+            task = ConnectionManager.getInstance().new ServerAsyncTask(activity);
             task.execute();
-            P2PManager.getInstance().setIsServer(true);
+            setIsServer(true);
         } else if (info.groupFormed) {
             // The other device acts as the client. In this case, we enable the
             // get file button.
-            task = new ClientAsyncTask(activity, info.groupOwnerAddress.getHostAddress(), ConnectionManager.getInstance());
+            task = ConnectionManager.getInstance().new ClientAsyncTask(activity, info.groupOwnerAddress.getHostAddress());
             task.execute();
             isServer = false;
         }
@@ -204,7 +207,7 @@ public class P2PManager  implements WifiP2pManager.ChannelListener,
         }
     }
 
-    public void setIsServer(boolean isServer) {
+    private void setIsServer(boolean isServer) {
         this.isServer = isServer;
     }
 
@@ -213,6 +216,7 @@ public class P2PManager  implements WifiP2pManager.ChannelListener,
     }
 
     public void connectTo(WifiP2pDevice device) {
+        this.device = device;
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = device.deviceAddress;
         config.wps.setup = WpsInfo.PBC;
@@ -221,9 +225,9 @@ public class P2PManager  implements WifiP2pManager.ChannelListener,
 
     public void sendMessage() {
         if(isServer())
-            ConnectionManager.getInstance().pushOutDataToClient("SERVERERE: Hello world from server!");
+            ConnectionManager.getInstance().pushOutData("SERVERERE: Hello world from server!");
         else
-            ConnectionManager.getInstance().pushOutDataToServer("CLIERNTE: Hello world from client!");
+            ConnectionManager.getInstance().pushOutData("CLIERNTE: Hello world from client!");
 
     }
 }
