@@ -154,7 +154,7 @@ public class WiFiDirectActivity extends Activity implements P2PListener {
                     discoverPeers();
                 } // This is your code
             };
-            mainHandler.post(myRunnable);
+            mainHandler.postDelayed(myRunnable, 1000);
         }
     }
 }
