@@ -20,6 +20,8 @@ import java.util.Iterator;
  */
 public class ConnectionManager {
     private static final String TAG = "ConnectionManager";
+    private static final int P2P_PORT = 8988;
+    private static final int SOCKET_SELECT_TIMEOUT = 500;
     private static final ConnectionManager instance = new ConnectionManager();
     public Context context;
 
@@ -139,7 +141,7 @@ public class ConnectionManager {
                 closeConnection();   // close linger server.
 
                 // create server socket and register to selector to listen OP_ACCEPT event
-                ConnectionManager.this.mServerSocketChannel = createServerSocketChannel(R.string.p2p_port);
+                ConnectionManager.this.mServerSocketChannel = createServerSocketChannel(P2P_PORT);
                 // BindException if already bind.
                 ConnectionManager.this.mServerAddr = ConnectionManager.this.mServerSocketChannel.socket().getInetAddress().getHostAddress();
 
@@ -173,7 +175,7 @@ public class ConnectionManager {
                 closeConnection();   // close linger server.
 
                 // connected to the server upon start client.
-                SocketChannel sChannel = connectTo(ConnectionManager.this.mServerAddr, R.string.p2p_port);
+                SocketChannel sChannel = connectTo(ConnectionManager.this.mServerAddr, P2P_PORT);
 
                 ConnectionManager.this.selector = Selector.open();
                 ConnectionManager.this.socketChannel = sChannel;
@@ -262,7 +264,7 @@ public class ConnectionManager {
         while (!ConnectionManager.this.isDisconnectNow() && !task.isCancelled()) {
             try {
                 Log.d(ConnectionManager.TAG, "select : selector monitoring: ");
-                selector.select(R.string.socket_select_timeout);   // blocked on waiting for event
+                selector.select(SOCKET_SELECT_TIMEOUT);   // blocked on waiting for event
 
                 Log.d(ConnectionManager.TAG, "select : selector evented out: ");
                 // Get list of selection keys with pending events, and process it.
@@ -294,7 +296,7 @@ public class ConnectionManager {
         if (selKey.isValid() && selKey.isAcceptable()) {  // there is a connection to the server socket channel
             ServerSocketChannel ssChannel = (ServerSocketChannel) selKey.channel();
             SocketChannel sChannel = ssChannel.accept();  // accept the connect and get a new socket channel.
-            ConnectionManager.this.socketChannel = sChannel;
+            this.socketChannel = sChannel;
             sChannel.configureBlocking(false);
 
             // let the selector monitor read/write the accepted connections.

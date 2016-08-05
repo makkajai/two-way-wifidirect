@@ -42,3 +42,4 @@ captures/
 .idea/
 app/build/
 build/
+.DS_Store
