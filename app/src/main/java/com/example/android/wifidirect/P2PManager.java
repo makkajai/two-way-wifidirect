@@ -19,7 +19,9 @@ import java.util.List;
 /**
  * Created by batman on 04/08/16.
  */
-public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceActionListener, WifiP2pManager.PeerListListener, WifiP2pManager.ConnectionInfoListener {
+public class P2PManager  implements WifiP2pManager.ChannelListener,
+                                    WifiP2pManager.PeerListListener,
+                                    WifiP2pManager.ConnectionInfoListener {
 
     private static final String TAG = "P2PManager";
     private static final P2PManager instance = new P2PManager();
@@ -82,12 +84,6 @@ public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceAction
         });
     }
 
-    @Override
-    public void showDetails(WifiP2pDevice device) {
-
-    }
-
-    @Override
     public void cancelDisconnect() {
         /*
          * A cancel abort request by user. Disconnect i.e. removeGroup if
