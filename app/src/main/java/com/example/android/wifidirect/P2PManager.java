@@ -4,13 +4,14 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.AsyncTask;
 import android.util.Log;
-import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,7 @@ public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceAction
     private Activity activity;
     private boolean isWifiP2pEnabled;
     private boolean isServer;
+    private AsyncTask<Void, Void, Integer> task;
 
     public static P2PManager getInstance() {
         return instance;
@@ -46,17 +48,25 @@ public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceAction
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-        manager = (WifiP2pManager) activity.getSystemService(Context.WIFI_P2P_SERVICE);
-        channel = manager.initialize(activity, activity.getMainLooper(), null);
     }
 
     public void startReceiver() {
-        receiver = new WiFiDirectBroadcastReceiver(manager, channel);
-        activity.registerReceiver(receiver, intentFilter);
+        if(receiver == null) {
+            manager = (WifiP2pManager) activity.getSystemService(Context.WIFI_P2P_SERVICE);
+            channel = manager.initialize(activity, activity.getMainLooper(), null);
+            receiver = new WiFiDirectBroadcastReceiver(manager, channel);
+            activity.registerReceiver(receiver, intentFilter);
+        }
     }
 
     public void stopReceiver() {
-        activity.unregisterReceiver(receiver);
+        if(receiver != null) {
+            this.disconnectOnly();
+            activity.unregisterReceiver(receiver);
+            receiver = null;
+            channel = null;
+            manager = null;
+        }
     }
 
     public void discoverPeers() {
@@ -120,6 +130,11 @@ public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceAction
     }
 
     public void disconnect() {
+        disconnectOnly();
+        this.onChannelDisconnected();
+    }
+
+    private void disconnectOnly() {
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
 
             @Override
@@ -132,14 +147,14 @@ public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceAction
             }
 
         });
-        ConnectionManager.getInstance().disconnectNow = true;
-        //TODO: Should reset the data too -- DEEP
+        terminateTask();
     }
 
     @Override
     public void onChannelDisconnected() {
         // we will try once more
-        ConnectionManager.getInstance().disconnectNow = true;
+        ConnectionManager.getInstance().setDisconnectNow(true);
+        ((WiFiDirectActivity)activity).onAfterDisconnect();
     }
 
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
@@ -167,17 +182,30 @@ public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceAction
         // After the group negotiation, we assign the group owner as the file
         // server. The file server is single threaded, single connection server
         // socket.
+        if(info.groupFormed) {
+            ConnectionManager.getInstance().setDisconnectNow(false);
+            ((WiFiDirectActivity)activity).onConnectionSuccessful();
+            terminateTask();
+        }
         if (info.groupFormed && info.isGroupOwner) {
-            new ServerAsyncTask(activity, ConnectionManager.getInstance())
-                    .execute();
+            task = new ServerAsyncTask(activity, ConnectionManager.getInstance());
+            task.execute();
             P2PManager.getInstance().setIsServer(true);
         } else if (info.groupFormed) {
             // The other device acts as the client. In this case, we enable the
             // get file button.
-            new ClientAsyncTask(activity, info.groupOwnerAddress.getHostAddress(), ConnectionManager.getInstance()).execute();
+            task = new ClientAsyncTask(activity, info.groupOwnerAddress.getHostAddress(), ConnectionManager.getInstance());
+            task.execute();
             isServer = false;
         }
         //TODO: Should show the button to actually send the message -- DEEP
+    }
+
+    private void terminateTask() {
+        if(task != null) {
+            task.cancel(true);
+            task = null;
+        }
     }
 
     public void setIsServer(boolean isServer) {
@@ -188,7 +216,18 @@ public class P2PManager  implements WifiP2pManager.ChannelListener, DeviceAction
         return isServer;
     }
 
-    public void setServer(boolean isServer) {
-        this.isServer = isServer;
+    public void connectTo(WifiP2pDevice device) {
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = device.deviceAddress;
+        config.wps.setup = WpsInfo.PBC;
+        connect(config);
+    }
+
+    public void sendMessage() {
+        if(isServer())
+            ConnectionManager.getInstance().pushOutDataToClient("SERVERERE: Hello world from server!");
+        else
+            ConnectionManager.getInstance().pushOutDataToServer("CLIERNTE: Hello world from client!");
+
     }
 }

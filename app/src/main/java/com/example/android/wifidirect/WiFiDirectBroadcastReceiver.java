@@ -62,7 +62,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
             } else {
                 P2PManager.getInstance().setIsWifiP2pEnabled(false);
                 //TODO: Notify the acitivty that the mode is not enabled -- DEEP
-//                activity.resetData();
+//                activity.resetViews();
             }
             Log.d(TAG, "P2P state changed - " + state);
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
@@ -89,7 +89,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 // info to find group owner IP
                 manager.requestConnectionInfo(channel, P2PManager.getInstance());
             } else {
-                // It's a disconnect
+                // It's a disconnectClicked
                 P2PManager.getInstance().disconnect();
             }
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {

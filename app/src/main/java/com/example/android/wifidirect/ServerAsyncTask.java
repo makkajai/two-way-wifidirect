@@ -4,8 +4,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -21,7 +19,7 @@ import java.util.Iterator;
  * A simple server socket that accepts connection and writes some data on
  * the stream.
  */
-public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
+public class ServerAsyncTask extends AsyncTask<Void, Void, Integer> {
 
     private ConnectionManager instance;
 
@@ -48,7 +46,7 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
 
 
     @Override
-    protected String doInBackground(Void... params) {
+    protected Integer doInBackground(Void... params) {
         try {
             closeServer();   // close linger server.
 
@@ -61,10 +59,10 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
             acceptKey.attach("accept_channel");
 
             // Wait for events looper
-            while (!ConnectionManager.getInstance().disconnectNow) {
+            while (!ConnectionManager.getInstance().isDisconnectNow() && !isCancelled()) {
                 try {
                     Log.d(WiFiDirectActivity.TAG, "select : selector monitoring: ");
-                    this.instance.mServerSelector.select(1000);   // blocked on waiting for event
+                    this.instance.mServerSelector.select(100);   // blocked on waiting for event
 
                     Log.d(WiFiDirectActivity.TAG, "select : selector evented out: ");
                     // Get list of selection keys with pending events, and process it.
@@ -88,12 +86,12 @@ public class ServerAsyncTask extends AsyncTask<Void, Void, String> {
                     break;
                 }
             }
-            ConnectionManager.getInstance().disconnectNow = false;
-            closeServer();   // close linger server.
-            return "";
+            return 0;
         } catch (IOException e) {
             Log.e(WiFiDirectActivity.TAG, e.getMessage());
-            return null;
+            return -1;
+        } finally {
+            closeServer();   // close linger server.
         }
     }
 

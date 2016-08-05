@@ -17,13 +17,11 @@
 package com.example.android.wifidirect;
 
 import android.app.Activity;
-import android.content.Intent;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.os.Handler;
 
 import java.util.List;
 
@@ -37,12 +35,8 @@ import java.util.List;
 public class WiFiDirectActivity extends Activity implements P2PListener {
 
     public static final String TAG = "wifidirectdemo";
-
-    /**
-     * @param isWifiP2pEnabled the isWifiP2pEnabled to set
-     */
-    public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
-    }
+    private ProgressDialog progressDialog;
+    private boolean isDiscoveringPeers;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -58,10 +52,26 @@ public class WiFiDirectActivity extends Activity implements P2PListener {
     @Override
     public void onResume() {
         super.onResume();
-        resetData();
-        ConnectionManager.getInstance().disconnectNow = false;
+        discoverPeers();
+    }
+
+    public void discoverPeers() {
+        isDiscoveringPeers = true;
+        resetViews();
+        ConnectionManager.getInstance().setDisconnectNow(false);
         P2PManager.getInstance().startReceiver();
         P2PManager.getInstance().discoverPeers();
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        progressDialog = ProgressDialog.show(this, "Press back to cancel", "finding peers", true,
+                true, new DialogInterface.OnCancelListener() {
+
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+
+                    }
+                });
     }
 
     @Override
@@ -74,7 +84,7 @@ public class WiFiDirectActivity extends Activity implements P2PListener {
      * Remove all peers and clear all fields. This is called on
      * BroadcastReceiver receiving a state change event.
      */
-    public void resetData() {
+    public void resetViews() {
         DeviceListFragment fragmentList = (DeviceListFragment) getFragmentManager()
                 .findFragmentById(R.id.frag_list);
         DeviceDetailFragment fragmentDetails = (DeviceDetailFragment) getFragmentManager()
@@ -88,38 +98,63 @@ public class WiFiDirectActivity extends Activity implements P2PListener {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.action_items, menu);
-        return true;
-    }
+    public void onPeersAvailable(final List<WifiP2pDevice> wifiP2pDeviceList) {
+        if(wifiP2pDeviceList.size() > 0) {
+            isDiscoveringPeers = false;
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
 
-    /*
-     * (non-Javadoc)
-     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.atn_direct_enable:
-                // Since this is the system wireless settings activity, it's
-                // not going to send us a result. We will be notified by
-                // WiFiDeviceBroadcastReceiver instead.
-
-                startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
-                return true;
-
-            case R.id.atn_direct_discover:
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+            DeviceListFragment fragmentList = (DeviceListFragment) getFragmentManager()
+                    .findFragmentById(R.id.frag_list);
+            fragmentList.onPeersAvailable(wifiP2pDeviceList);
         }
     }
 
-    @Override
-    public void onPeersAvailable(List<WifiP2pDevice> wifiP2pDeviceList) {
-        DeviceListFragment fragmentList = (DeviceListFragment) getFragmentManager()
-                .findFragmentById(R.id.frag_list);
-        fragmentList.onPeersAvailable(wifiP2pDeviceList);
+    public void connectTo(WifiP2pDevice device) {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        progressDialog = ProgressDialog.show(this, "Press back to cancel",
+                "Connecting to :" + device.deviceAddress, true, true,
+                        new DialogInterface.OnCancelListener() {
+
+                            @Override
+                            public void onCancel(DialogInterface dialog) {
+                                P2PManager.getInstance().cancelDisconnect();
+                            }
+                        }
+        );
+
+        P2PManager.getInstance().connectTo(device);
+    }
+
+    public void disconnectClicked() {
+        P2PManager.getInstance().disconnect();
+    }
+
+    public void onConnectionSuccessful() {
+        DeviceDetailFragment fragmentDetails = (DeviceDetailFragment) getFragmentManager()
+                .findFragmentById(R.id.frag_detail);
+        fragmentDetails.onConnectionSuccessful();
+    }
+
+    public void sendMessage() {
+        P2PManager.getInstance().sendMessage();
+    }
+
+    public void onAfterDisconnect() {
+        if(!isDiscoveringPeers) {
+            Handler mainHandler = new Handler(this.getMainLooper());
+
+            Runnable myRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    resetViews();
+                    discoverPeers();
+                } // This is your code
+            };
+            mainHandler.post(myRunnable);
+        }
     }
 }

@@ -66,10 +66,10 @@ public class ClientAsyncTask  extends AsyncTask<Void, Void, Integer> {
             // start selector monitoring, blocking
 
             // Wait for events looper
-            while (!ConnectionManager.getInstance().disconnectNow) {
+            while (!ConnectionManager.getInstance().isDisconnectNow() && !isCancelled()) {
                 try {
                     Log.d(WiFiDirectActivity.TAG, "select : selector monitoring: ");
-                    this.instance.mClientSelector.select(1000);   // blocked on waiting for event
+                    this.instance.mClientSelector.select(100);   // blocked on waiting for event
 
                     Log.d(WiFiDirectActivity.TAG, "select : selector evented out: ");
                     // Get list of selection keys with pending events, and process it.
@@ -93,8 +93,6 @@ public class ClientAsyncTask  extends AsyncTask<Void, Void, Integer> {
                     break;
                 }
             }
-            ConnectionManager.getInstance().disconnectNow = false;
-            closeClient();   // close linger server.
             return 0;
 
         } catch(Exception e) {
@@ -103,6 +101,8 @@ public class ClientAsyncTask  extends AsyncTask<Void, Void, Integer> {
             this.instance.mClientSocketChannel = null;
 
             return -1;
+        } finally {
+            closeClient();   // close linger server.
         }
     }
 

@@ -23,7 +23,7 @@ public class ConnectionManager {
     public SocketChannel mClientSocketChannel = null;
     public SocketChannel mServerSocketChannelData = null;
 
-    public boolean disconnectNow = false;
+    private boolean disconnectNow = false;
 
     public static ConnectionManager getInstance() {
         return instance;
@@ -108,4 +108,11 @@ public class ConnectionManager {
         return writeData(mClientSocketChannel, jsonString);
     }
 
+    public boolean isDisconnectNow() {
+        return disconnectNow;
+    }
+
+    public void setDisconnectNow(boolean disconnectNow) {
+        this.disconnectNow = disconnectNow;
+    }
 }
