@@ -6,4 +6,8 @@ import java.util.List;
 
 public interface P2PListener {
     void onPeersAvailable(List<WifiP2pDevice> wifiP2pDeviceList);
+
+    void onAfterDisconnect();
+
+    void onConnectionSuccessful();
 }

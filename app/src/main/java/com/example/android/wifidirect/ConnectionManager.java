@@ -180,7 +180,7 @@ public class ConnectionManager {
                 ConnectionManager.this.selector = Selector.open();
                 ConnectionManager.this.socketChannel = sChannel;
                 sChannel.register(ConnectionManager.this.selector, SelectionKey.OP_READ);
-                Log.d(WiFiDirectActivity.TAG, "startClientSelector : started: "
+                Log.d(TAG, "startClientSelector : started: "
                         + ConnectionManager.this.socketChannel.socket().getLocalAddress().getHostAddress());
 
                 // start selector monitoring, blocking
@@ -189,7 +189,7 @@ public class ConnectionManager {
                 return 0;
 
             } catch(Exception e) {
-                Log.e(WiFiDirectActivity.TAG, "startClientSelector : exception: " + e.toString());
+                Log.e(TAG, "startClientSelector : exception: " + e.toString());
                 return -1;
             } finally {
                 closeConnection();   // close linger server.
@@ -325,7 +325,7 @@ public class ConnectionManager {
         } else if (selKey.isValid() && selKey.isWritable()) {
             // Not select on writable...endless loop.
             SocketChannel sChannel = (SocketChannel)selKey.channel();
-            Log.d(WiFiDirectActivity.TAG, "processSelectionKey : remote client is writable, write data: ");
+            Log.d(TAG, "processSelectionKey : remote client is writable, write data: ");
         }
         return null;
     }

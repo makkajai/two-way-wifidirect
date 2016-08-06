@@ -153,7 +153,7 @@ public class P2PManager  implements WifiP2pManager.ChannelListener,
     public void onChannelDisconnected() {
         // we will try once more
         ConnectionManager.getInstance().setDisconnectNow(true);
-        ((WiFiDirectActivity)activity).onAfterDisconnect();
+        ((P2PListener)activity).onAfterDisconnect();
     }
 
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
@@ -183,7 +183,7 @@ public class P2PManager  implements WifiP2pManager.ChannelListener,
         // socket.
         if(info.groupFormed) {
             ConnectionManager.getInstance().setDisconnectNow(false);
-            ((WiFiDirectActivity)activity).onConnectionSuccessful();
+            ((P2PListener)activity).onConnectionSuccessful();
             terminateTask();
         }
         if (info.groupFormed && info.isGroupOwner) {
