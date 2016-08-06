@@ -197,7 +197,6 @@ public class P2PManager  implements WifiP2pManager.ChannelListener,
             task.execute();
             isServer = false;
         }
-        //TODO: Should show the button to actually send the message -- DEEP
     }
 
     private void terminateTask() {
